@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-
     /* ----------------------------------------------------------------------------- */
     //Basic Ajax Setup and Login Logout
     /* ----------------------------------------------------------------------------- */
@@ -69,46 +68,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* ----------------------------------------------------------------------------- */
-    //END
-    /* ----------------------------------------------------------------------------- */
-
-    /* ----------------------------------------------------------------------------- */
-    //Instant Save and Instant View the images.
-    /* ----------------------------------------------------------------------------- */
-
-    $(".instantview").on('change', function () {
-        id = $(this).attr('id');
-
-        var formData = new FormData();
-        var ins = $("#" + id)[0].files.length;
-        for (var x = 0; x < ins; x++) {
-            formData.append("path[]", $("#" + id)[0].files[x]);
-        }
-
-        $.ajax({
-            type: "post",
-            url: '/api/documents',
-            data: formData,
-            datatype: 'json',
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function (data) {
-                $("#" + id + "carouselinner").empty();
-                $("#" + id + "id").val("");
-                $.each(data, function (index, element) {
-                    if ($('#' + id + "carouselinner").children().length > 0) {
-                        $('#' + id + "carouselinner").append("<div class='carousel-item'><img class='img-responsive' width='500' height='250' src='/storage/" + element.path + "'>");
-                    } else {
-                        $('#' + id + "carouselinner").append("<div class='carousel-item active'><img class='img-responsive' width='500' height='250' src='/storage/" + element.path + "'>");
-                    }
-                    $('#' + id + "id").val($('#' + id + "id").val() !== "" ? $('#' + id + "id").val() + ";" + element.id : $('#' + id + "id").val() + element.id);
-                    $('#' + id + "string").val($('#' + id + "string").val() !== "" ? $('#' + id + "string").val() + ";" + element.path : $('#' + id + "string").val() + element.path);
-                });
-            }
+    $.ajax({
+        type: "post",
+        url: '/api/documents',
+        data: formData,
+        datatype: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (data) {
+            $("#" + id + "carouselinner").empty();
+            $("#" + id + "id").val("");
+            $.each(data, function (index, element) {
+                if ($('#' + id + "carouselinner").children().length > 0) {
+                    $('#' + id + "carouselinner").append("<div class='carousel-item'><img class='img-responsive' src='/storage/" + element.path + "'>");
+                } else {
+                    $('#' + id + "carouselinner").append("<div class='carousel-item active'><img class='img-responsive' src='/storage/" + element.path + "'>");
+                }
+                $('#' + id + "id").val($('#' + id + "id").val() !== "" ? $('#' + id + "id").val() + ";" + element.id : $('#' + id + "id").val() + element.id);
+                $('#' + id + "string").val($('#' + id + "string").val() !== "" ? $('#' + id + "string").val() + ";" + element.path : $('#' + id + "string").val() + element.path);
+            });
         });
-    });
 
     $(".instantsave").on('change', function () {
         id = $(this).attr('id');
@@ -344,13 +324,17 @@ document.addEventListener("DOMContentLoaded", function () {
         maxHeight: 200,
         buttonWidth: '100%',
     });
-    refreshbranchselect();
-    $('.truckselect').each(function () {
-        $(this).multiselect({
-            enableCaseInsensitiveFiltering: true,
-            maxHeight: 200,
-            buttonWidth: '100%'
-        });
+});
+$('#isbranch').multiselect({
+    enableCaseInsensitiveFiltering: true,
+    maxHeight: 200,
+    buttonWidth: '100%',
+});
+$('.truckselect').each(function () {
+    $(this).multiselect({
+        enableCaseInsensitiveFiltering: true,
+        maxHeight: 200,
+        buttonWidth: '100%'
     });
 
     $(".selectstate").change(function () {
@@ -363,70 +347,78 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     if (window.location.pathname === "/admin/transporter/add" || window.location.pathname === "/admin/transporter/edit") {
-        allCities = [];
-        $.ajax({
-            type: "get",
-            url: '/api/cities',
-            success: function (data) {
-                allCities = data;
-            }
-        });
+
+        refreshbranchselect();
+
         function getCity(state) {
             return allCities.filter(item => item.state == state);
         }
-        $.ajax({
-            type: "get",
-            url: '/api/states',
-            success: function (data) {
-                $(".selectstate").empty();
-                $(".selectstate").append("<option value='' disabled selected>Select State</option>");
-                $.each(data, function (index, element) {
-                    $(".selectstate").append("<option value='" + element.id + "'>" + element.state + "</option>");
-                });
-            }
+
+        $(".selectstate").empty();
+        $(".selectstate").append("<option value='' disabled selected>Select State</option>");
+
+        $.each(allStates, function (index, element) {
+            $(".selectstate").append("<option value='" + element.id + "'>" + element.state + "</option>");
         });
 
-        refreshtruckselect();
-    }
-
-    function refreshtruckselect() {
-        $.ajax({
-            type: "get",
-            url: '/api/trucks',
-            datatype: 'json',
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function (data) {
-                $(".truckselect").each(function () {
-                    id = $(this).attr('id');
+        if (window.location.pathname === "/admin/transporter/add" || window.location.pathname === "/admin/transporter/edit") {
+            allCities = [];
+            $.ajax({
+                type: "get",
+                url: '/api/cities',
+                success: function (data) {
+                    allCities = data;
+                }
+            });
+            function getCity(state) {
+                return allCities.filter(item => item.state == state);
+            }
+            $.ajax({
+                type: "get",
+                url: '/api/states',
+                success: function (data) {
+                    $(".selectstate").empty();
+                    $(".selectstate").append("<option value='' disabled selected>Select State</option>");
                     $.each(data, function (index, element) {
-                        if ($("#" + (element.type).replace(/ /g, "_") + id).length) {
-                            $("#" + element.type + id).append("<option value='" + element.id + "'>" + element.type + "(" + element.style + "), " + element.category + ", " + element.size + " Feet, " + element.capacity + " Ton.</option>");
-                        } else {
-                            $("#" + id).append("<optgroup id='" + (element.type).replace(/ /g, "_") + id + "' label='" + element.type + "'><option value='" + element.id + "'>" + element.type + "(" + element.style + "), " + element.category + ", " + element.size + " Feet, " + element.capacity + " Ton.</option></optgroup>");
-                        }
+                        $(".selectstate").append("<option value='" + element.id + "'>" + element.state + "</option>");
                     });
-                    $("#" + id).multiselect("rebuild");
-                });
-            }
-        });
-    }
+                }
+            });
 
-    /* ----------------------------------------------------------------------------- */
-    //END
-    /* ----------------------------------------------------------------------------- */
-
-    /* ----------------------------------------------------------------------------- */
-    // Add transporter to the database
-    /* ----------------------------------------------------------------------------- */
-
-    $("#addtransportertodatabase").click(function () {
-        event.preventDefault();
-
-        if (!transportervalidation()) {
-            return false;
+            refreshtruckselect();
         }
+
+        function refreshtruckselect() {
+            $.ajax({
+                type: "get",
+                url: '/api/trucks',
+                datatype: 'json',
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $(".truckselect").each(function () {
+                        id = $(this).attr('id');
+                        $.each(data, function (index, element) {
+                            if ($("#" + (element.type).replace(/ /g, "_") + id).length) {
+                                $("#" + element.type + id).append("<option value='" + element.id + "'>" + element.type + "(" + element.style + "), " + element.category + ", " + element.size + " Feet, " + element.capacity + " Ton.</option>");
+                            } else {
+                                $("#" + id).append("<optgroup id='" + (element.type).replace(/ /g, "_") + id + "' label='" + element.type + "'><option value='" + element.id + "'>" + element.type + "(" + element.style + "), " + element.category + ", " + element.size + " Feet, " + element.capacity + " Ton.</option></optgroup>");
+                            }
+                        });
+                        $("#" + id).multiselect("rebuild");
+                    });
+                }
+            });
+        }
+
+        /* ----------------------------------------------------------------------------- */
+        //END
+        /* ----------------------------------------------------------------------------- */
+
+        /* ----------------------------------------------------------------------------- */
+        // Add transporter to the database
+        /* ----------------------------------------------------------------------------- */
 
         var formData = new FormData();
         formData.append("businessname", $("#transportername").val());
@@ -575,6 +567,200 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+/* ----------------------------------------------------------------------------- */
+//END
+/* ----------------------------------------------------------------------------- */
+
+/* ----------------------------------------------------------------------------- */
+//Filling up the data on the view page of the transporter.
+/* ----------------------------------------------------------------------------- */
+
+if (window.location.pathname === "/admin/transporter/view") {
+    id = (window.location.href).split('?')[1];
+    $.ajax({
+        type: "get",
+        url: '/api/transporters/' + id,
+        success: function (data) {
+            $("#transporterid").val(data.id);
+            $("#viewbusinessname").append(data.businessname);
+            $("#viewownername").append(data.ownername + ", " + data.type + ", " + data.ratingstring);
+            $("#viewaadhar").append(data.aadhar);
+            $("#viewpan").append(data.pan);
+            $("#viewgst").append(data.gst);
+            $("#viewwhatsappnumber").append(data.whatsappnumber);
+            $("#viewemailaddress").append(data.email);
+            $("#viewreferrername").append(data.referrername + " (" + data.referrermobile + ")");
+            $("#headbranch").append(data.headbranchname);
+            $("#headbranch").attr('href', "/admin/transporter/view?" + data.headbranch);
+
+            $("#viewname1").append(data.name1);
+            $("#viewname2").append(data.name2);
+            $("#viewname3").append(data.name3);
+            $("#viewname4").append(data.name4);
+            $("#viewname5").append(data.name5);
+            $("#viewmobile11").append(data.mobile11);
+            $("#viewmobile12").append(data.mobile12);
+            $("#viewmobile13").append(data.mobile13);
+            $("#viewmobile14").append(data.mobile14);
+            $("#viewmobile15").append(data.mobile15);
+            $("#viewmobile21").append(data.mobile21);
+            $("#viewmobile22").append(data.mobile22);
+            $("#viewmobile23").append(data.mobile23);
+            $("#viewmobile24").append(data.mobile24);
+            $("#viewmobile25").append(data.mobile25);
+            $("#viewwhatsapp1").append(data.whatsappnumber1);
+            $("#viewwhatsapp2").append(data.whatsappnumber2);
+            $("#viewwhatsapp3").append(data.whatsappnumber3);
+            $("#viewwhatsapp4").append(data.whatsappnumber4);
+            $("#viewwhatsapp5").append(data.whatsappnumber5);
+
+            $("#viewaddress").append(data.address + " ," + data.statestring + ", " + data.citystring + " ," + data.area);
+            $("#viewbusinessname").append(" ," + data.statestring + ", " + data.citystring + " ," + data.area);
+
+            $("#viewvisitingcardcarouselinner").empty();
+            $.each(data.visitingcardstring.split(';'), function (index, element) {
+                if ($("#viewvisitingcardcarouselinner").children().length > 0) {
+                    $("#viewvisitingcardcarouselinner").append("<div class='carousel-item'><img class='img-responsive' src='/storage/" + element + "'>");
+                } else {
+                    $("#viewvisitingcardcarouselinner").append("<div class='carousel-item active'><img class='img-responsive' src='/storage/" + element + "'>");
+                }
+            });
+
+            if (!transportervalidation()) {
+                return false;
+            }
+
+            $('#edittransporteranchor').attr("href", "/admin/transporter/edit?" + id);
+        }
+    });
+}
+
+/* ----------------------------------------------------------------------------- */
+//END
+/* ----------------------------------------------------------------------------- */
+
+/* ----------------------------------------------------------------------------- */
+//Filling up the transporter data during edit.
+/* ----------------------------------------------------------------------------- */
+
+if (window.location.pathname === "/admin/transporter/edit") {
+    id = (window.location.href).split('?')[1];
+    $.ajax({
+        type: "get",
+        url: '/api/transporters/' + id,
+        success: function (data) {
+            $("#transporterid").val(data.id);
+            $("#transportername").val(data.businessname);
+            $("#ownername").val(data.ownername);
+            $("#transportertype").val(data.type);
+            $("#ratings").val(data.rating);
+            $("#emailaddress").val(data.email);
+            $("#whatsappmobile").val(data.whatsappnumber);
+            $("#transporteraadhar").val(data.aadhar);
+            $("#transporterpan").val(data.pan);
+            $("#transportergst").val(data.gst);
+            $("#address").val(data.address);
+            $("#basicarea").val(data.area);
+            $("#basiccitystate").val(data.state).trigger('change');
+            $("#basiccity").multiselect("deselect", $("#basiccity").val());
+            $("#basiccity").multiselect("select", data.city);
+            $("#isbranch").multiselect("deselect", $("#isbranch").val());
+            $("#isbranch").multiselect("select", data.headbranch);
+            $("#referrername").val(data.referrername);
+            $("#referrermobile").val(data.referrermobile);
+            $("#documentsid").val(data.documentid);
+            $("#documentsstring").val(data.documentstring);
+            $("#vsitingcardid").val(data.vsitingcardid);
+            $("#visitingcardstring").val(data.visitingcardstring);
+
+            $("#multiplename1").val(data.name1);
+            $("#multiplename2").val(data.name2);
+            $("#multiplename3").val(data.name3);
+            $("#multiplename4").val(data.name4);
+            $("#multiplename5").val(data.name5);
+            $("#multiplecontact11").val(data.mobile11);
+            $("#multiplecontact12").val(data.mobile12);
+            $("#multiplecontact13").val(data.mobile13);
+            $("#multiplecontact14").val(data.mobile14);
+            $("#multiplecontact15").val(data.mobile15);
+            $("#multiplecontact21").val(data.mobile21);
+            $("#multiplecontact22").val(data.mobile22);
+            $("#multiplecontact23").val(data.mobile23);
+            $("#multiplecontact24").val(data.mobile24);
+            $("#multiplecontact25").val(data.mobile25);
+            $("#multiplewhatsappmobile1").val(data.whatsappnumber1);
+            $("#multiplewhatsappmobile2").val(data.whatsappnumber2);
+            $("#multiplewhatsappmobile3").val(data.whatsappnumber3);
+            $("#multiplewhatsappmobile4").val(data.whatsappnumber4);
+            $("#multiplewhatsappmobile5").val(data.whatsappnumber5);
+
+            $("#bankholdername1").val(data.holdername1);
+            $("#bankholdername2").val(data.holdername2);
+            $("#bankholdername3").val(data.holdername3);
+            $("#bankholdername4").val(data.holdername4);
+            $("#bankholdername5").val(data.holdername5);
+            $("#accountnumber1").val(data.accountnumber1);
+            $("#accountnumber2").val(data.accountnumber2);
+            $("#accountnumber3").val(data.accountnumber3);
+            $("#accountnumber4").val(data.accountnumber4);
+            $("#accountnumber5").val(data.accountnumber5);
+            $("#bankname1").val(data.bankname1);
+            $("#bankname2").val(data.bankname2);
+            $("#bankname3").val(data.bankname3);
+            $("#bankname4").val(data.bankname4);
+            $("#bankname5").val(data.bankname5);
+            $("#bankbranch1").val(data.branch1);
+            $("#bankbranch2").val(data.branch2);
+            $("#bankbranch3").val(data.branch3);
+            $("#bankbranch4").val(data.branch4);
+            $("#bankbranch5").val(data.branch5);
+            $("#ifsccode1").val(data.ifsccode1);
+            $("#ifsccode2").val(data.ifsccode2);
+            $("#ifsccode3").val(data.ifsccode3);
+            $("#ifsccode4").val(data.ifsccode4);
+            $("#ifsccode5").val(data.ifsccode5);
+
+            $("#fromservicecitystate1").val(data.fromstate1).trigger('change');
+            $("#fromservicecitystate2").val(data.fromstate2).trigger('change');
+            $("#fromservicecitystate3").val(data.fromstate3).trigger('change');
+            $("#fromservicecitystate4").val(data.fromstate4).trigger('change');
+            $("#fromservicecitystate5").val(data.fromstate5).trigger('change');
+            $("#fromservicecity1").multiselect('select', data.fromcity1.split(";"));
+            $("#fromservicecity2").multiselect('select', data.fromcity2.split(";"));
+            $("#fromservicecity3").multiselect('select', data.fromcity3.split(";"));
+            $("#fromservicecity4").multiselect('select', data.fromcity4.split(";"));
+            $("#fromservicecity5").multiselect('select', data.fromcity5.split(";"));
+            $("#toservicecitystate1").val(data.tostate1).trigger('change');
+            $("#toservicecitystate2").val(data.tostate2).trigger('change');
+            $("#toservicecitystate3").val(data.tostate3).trigger('change');
+            $("#toservicecitystate4").val(data.tostate4).trigger('change');
+            $("#toservicecitystate5").val(data.tostate5).trigger('change');
+            $("#toservicecity1").multiselect('select', data.tocity1.split(";"));
+            $("#toservicecity2").multiselect('select', data.tocity2.split(";"));
+            $("#toservicecity3").multiselect('select', data.tocity3.split(";"));
+            $("#toservicecity4").multiselect('select', data.tocity4.split(";"));
+            $("#toservicecity5").multiselect('select', data.tocity5.split(";"));
+            $("#truckselect1").multiselect('select', data.truck1.split(";"));
+            $("#truckselect2").multiselect('select', data.truck2.split(";"));
+            $("#truckselect3").multiselect('select', data.truck3.split(";"));
+            $("#truckselect4").multiselect('select', data.truck4.split(";"));
+            $("#truckselect5").multiselect('select', data.truck5.split(";"));
+            $("#commodities1").val(data.commodity1);
+            $("#commodities2").val(data.commodity2);
+            $("#commodities3").val(data.commodity3);
+            $("#commodities4").val(data.commodity4);
+            $("#commodities5").val(data.commodity5);
+
+            $("#visitingcardcarouselinner").empty();
+            $.each(data.visitingcardstring.split(';'), function (index, element) {
+                if ($("#visitingcardcarouselinner").children().length > 0) {
+                    $("#visitingcardcarouselinner").append("<div class='carousel-item'><img class='img-responsive' src='/storage/" + element + "'>");
+                } else {
+                    $("#visitingcardcarouselinner").append("<div class='carousel-item active'><img class='img-responsive' src='/storage/" + element + "'>");
+                }
+            });
+        });
 
     /* ----------------------------------------------------------------------------- */
     //END
